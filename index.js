@@ -36,7 +36,12 @@ async function run() {
       .collection("job_applications");
     // Get all jobs
     app.get("/jobs", async (req, res) => {
-      const result = await jobsCollection.find().toArray();
+      const email = req.query.email;
+      let query = {};
+      if (email) {
+        query = { hr_email: email };
+      }
+      const result = await jobsCollection.find(query).toArray();
       res.send(result);
     });
     app.get("/jobs/:id", async (req, res) => {
@@ -67,15 +72,57 @@ async function run() {
           application.title = job.title;
           application.location = job.location;
           application.company = job.company;
+          application.applicationDeadline = job.applicationDeadline;
           application.company_logo = job.company_logo;
         }
       }
 
       res.send(result);
     });
+
+    app.get("/job-application/jobs/:job_id", async (req, res) => {
+      const jobId = req.params.job_id;
+      const query = { job_id: jobId };
+      const result = await jobApplicationCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.post("/job-applications", async (req, res) => {
       const application = req.body;
       const result = await jobApplicationCollection.insertOne(application);
+      const id = application.job_id;
+      const query = { _id: new ObjectId(id) };
+      const job = await jobsCollection.findOne(query);
+      console.log(job);
+      let count = 0;
+      if (job.applicationsCount) {
+        newCount = job.applicationsCount + 1;
+      } else {
+        newCount = 1;
+      }
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          applicationsCount: newCount,
+        },
+      };
+      const updatedResult = await jobsCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.patch("/job-applications/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: data.status,
+        },
+      };
+      const result = await jobApplicationCollection.updateOne(
+        filter,
+        updateDoc
+      );
       res.send(result);
     });
   } finally {
