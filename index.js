@@ -9,7 +9,11 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "http://localhost:5173",
+      "https://job-box-bc707.web.app",
+      "https://job-box-bc707.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
@@ -48,12 +52,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    //await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    //await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
 
     // Database and collection
     const jobsCollection = client.db("jobBox").collection("jobs");
@@ -70,7 +74,7 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false, // noe for localhost, Set to true if using HTTPS
+          secure: process.env.NODE_ENV === 'production',
         })
         .send({ success: true });
     });
@@ -83,7 +87,7 @@ async function run() {
         .send({ success: true });
     });
     // Get all jobs
-    app.get("/jobs",  async (req, res) => {
+    app.get("/jobs", async (req, res) => {
       console.log("now inside the api callback");
       const email = req.query.email;
       let query = {};
