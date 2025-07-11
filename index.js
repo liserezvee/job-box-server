@@ -7,16 +7,7 @@ require("dotenv").config();
 const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://job-box-bc707.web.app",
-      "https://job-box-bc707.firebaseapp.com",
-    ],
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
@@ -33,7 +24,7 @@ const verifyToken = (req, res, next) => {
       return res.status(403).json({ message: "Forbidden access" });
     }
     req.user = decoded;
-    console.log("decoded user", decoded);
+    //console.log("decoded user", decoded);
     next();
   });
 };
@@ -74,7 +65,7 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
+          secure: process.env.NODE_ENV === "production",
         })
         .send({ success: true });
     });
